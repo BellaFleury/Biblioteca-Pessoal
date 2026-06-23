@@ -1,4 +1,35 @@
-from cadastro import biblioteca
+def registrar_progresso():
+    print("-" * 30)
+    if not biblioteca:
+        print("Nenhum livro cadastrado ainda.\n")
+        return
+
+    print("Livros disponíveis:")
+    for titulo in biblioteca:
+        print(f"- {titulo}")
+
+    titulo = input("\nDigite o título do livro: ").strip()
+
+    if titulo not in biblioteca:
+        print(f"Livro '{titulo}' não encontrado.\n")
+        return
+
+    livro = biblioteca[titulo]
+
+    if titulo in progressos:
+        progresso = progressos[titulo]
+    else:
+        total_paginas = int(input(f"Quantas páginas tem o livro '{titulo}'? "))
+        progresso = ProgressoLeitura(livro, total_paginas)
+        progressos[titulo] = progresso
+
+    pagina = int(input(f"Em que página você parou? (0 a {progresso.total_paginas}) "))
+
+    try:
+        progresso.atualizar_pagina(pagina)
+        print(f"\nProgresso atualizado!\n{progresso}\n")
+    except ValueError as erro:
+        print(f"Erro: {erro}\n")from cadastro import biblioteca
 
 progressos = {}
 
