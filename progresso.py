@@ -1,4 +1,12 @@
-def registrar_progresso():
+def ver_progressos():
+    print("-" * 30)
+    if not progressos:
+        print("Nenhum progresso registrado ainda.\n")
+        return
+
+    for progresso in progressos.values():
+        print(progresso)
+        print()def registrar_progresso():
     print("-" * 30)
     if not biblioteca:
         print("Nenhum livro cadastrado ainda.\n")
