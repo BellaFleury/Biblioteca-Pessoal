@@ -1,1 +1,5 @@
-biblioteca {}
+biblioteca = {}
+
+titulo = input("Digite o título do livro:")
+autor = input("Digite o autor do livro:")
+genero = input("Digite o gênero do livro:")
