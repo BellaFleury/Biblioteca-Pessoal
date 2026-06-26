@@ -41,3 +41,11 @@ biblioteca.adicionar_livro(Livro("Dom Casmurro", "Machado de Assis", "Romance"))
 biblioteca.adicionar_livro(Livro("Memórias Póstumas", "Machado de Assis", "Romance"))
 biblioteca.adicionar_livro(Livro("O Hobbit", "J.R.R. Tolkien", "Fantasia"))
 biblioteca.adicionar_livro(Livro("Harry Potter", "J.K. Rowling", "Fantasia"))
+
+# Menu
+print("\n=== FILTRO DE LIVROS ===")
+print("1 - Filtrar por autor")
+print("2 - Filtrar por gênero")
+print("3 - Filtrar por autor e gênero")
+
+opcao = input("Escolha uma opção: ")
