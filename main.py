@@ -49,3 +49,28 @@ print("2 - Filtrar por gênero")
 print("3 - Filtrar por autor e gênero")
 
 opcao = input("Escolha uma opção: ")
+
+if opcao == "1":
+    autor = input("Digite o autor: ")
+    resultados = biblioteca.filtrar_por_autor(autor)
+
+elif opcao == "2":
+    genero = input("Digite o gênero: ")
+    resultados = biblioteca.filtrar_por_genero(genero)
+
+elif opcao == "3":
+    autor = input("Digite o autor: ")
+    genero = input("Digite o gênero: ")
+    resultados = biblioteca.filtrar_por_autor_e_genero(autor, genero)
+
+else:
+    print("Opção inválida!")
+    resultados = []
+
+print("\n=== RESULTADOS ===")
+
+if resultados:
+    for livro in resultados:
+        print(livro)
+else:
+    print("Nenhum livro encontrado.")
