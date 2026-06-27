@@ -1,4 +1,3 @@
-Livro
 class Livro:
     def __init__(self, titulo, autor, genero, total_paginas=0, status="quero_ler"):
         self.titulo = titulo
