@@ -1,44 +1,37 @@
-App.py
 import streamlit as st
 import pandas as pd
 import altair as alt
-from biblioteca import Biblioteca
+from Biblioteca import Biblioteca
 
-def carregar_css(nome_arquivo):
-    with open(nome_arquivo, encoding="utf-8") as f:
-        st.markdown(
-            f"<style>{f.read()}</style>",
-            unsafe_allow_html=True
-        )
-
+# ── Configuração da página ──────────────────────────────────────────────────
 st.set_page_config(
     page_title="Biblioteca Pessoal",
     page_icon="assets/favicon.png",
     layout="wide",
 )
 
+# ── Carrega CSS externo ─────────────────────────────────────────────────────
+def carregar_css(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 carregar_css("style.css")
 
 # ── Estado da sessão ────────────────────────────────────────────────────────
 if "bib" not in st.session_state:
     bib = Biblioteca()
-    # Livros de exemplo para não aparecer vazio
     bib.cadastrar("O Senhor dos Anéis", "J.R.R. Tolkien", "Fantasia", 1200)
     bib.cadastrar("1984", "George Orwell", "Distopia", 328)
     bib.cadastrar("Dom Casmurro", "Machado de Assis", "Romance", 256)
     bib.cadastrar("Duna", "Frank Herbert", "Ficção Científica", 688)
-
-    # Progresso e avaliações nos livros de exemplo
     bib.buscar("1984").atualizar_pagina(328)
     bib.buscar("1984").adicionar_avaliacao(5, "Clássico indispensável.")
     bib.buscar("Dom Casmurro").atualizar_pagina(256)
     bib.buscar("Dom Casmurro").adicionar_avaliacao(4, "Capitu era culpada? Nunca saberemos.")
     bib.buscar("O Senhor dos Anéis").atualizar_pagina(420)
-    bib.buscar("Duna").atualizar_pagina(0)
-
     st.session_state.bib = bib
 
-bib: Biblioteca = st.session_state.bib
+bib = st.session_state.bib
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 STATUS_LABEL = {"lido": "Lido", "lendo": "Lendo", "quero_ler": "Quero ler"}
@@ -49,42 +42,28 @@ def badge(status):
 
 def render_card(livro):
     av = livro.get_avaliacao()
-    nota = ESTRELAS[av["nota"]] if av else "Sem avaliação"
+    nota_html = f"&nbsp;&nbsp;{ESTRELAS[av['nota']]}" if av else ""
     pct = livro.percentual_concluido()
-    st.image("assets/books.png", width=35)
-    st.markdown(
-        f"""
-        <div class="card">
-        <div class="card-titulo">
-             {livro.titulo}
-        </div>
+    progresso_html = f"<div class='card-meta' style='margin-top:4px;'>Progresso: {pct}% ({livro.pagina_atual}/{livro.total_paginas} págs)</div>" if livro.total_paginas > 0 else ""
+    comentario_html = f"<div class='card-meta' style='font-style:italic;margin-top:2px;'>\"{av['comentario']}\"</div>" if av and av['comentario'] else ""
+    st.markdown(f"""
+    <div class="card">
+        <div class="card-titulo">{livro.titulo}{badge(livro.status)}{nota_html}</div>
+        <div class="card-meta">{livro.autor} &nbsp;·&nbsp; {livro.genero}</div>
+        {progresso_html}
+        {comentario_html}
+    </div>
+    """, unsafe_allow_html=True)
 
-       <div class="card-meta">
-            {livro.autor}
-        </div>
-        <div class="card-meta">
-            {livro.genero}
-        </div>
+def titulo_pagina(imagem, texto):
+    col_img, col_txt = st.columns([1, 10])
+    with col_img:
+        st.image(imagem, width= 180)
+    with col_txt:
+        st.title(texto)
+    st.markdown("---")
 
-        <br>
-        <div>
-            {badge(livro.status)}
-        </div>
-        <br>
-        <div class="card-meta">
-            {livro.pagina_atual}/{livro.total_paginas} páginas
-        </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.progress(pct/100)
-    st.caption(f"{pct}% concluído")
-    st.write(nota)
-    if av and av["comentario"]:
-        st.caption(f'"{av["comentario"]}"')
-
-# ── Sidebar / Navegação ─────────────────────────────────────────────────────
+# ── Sidebar ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.image("assets/logo.png", width=220)
     st.markdown("---")
@@ -98,32 +77,24 @@ with st.sidebar:
 # PÁGINA: INÍCIO
 # ════════════════════════════════════════════════════════════════════════════
 if pagina == "Início":
-    col_logo, col_texto = st.columns([1,5])
-    with col_logo:
-        st.image("assets/logo.png", width=90)
-    with col_texto:
-        st.title("Biblioteca Pessoal")
-        st.caption(
-        "Organize seus livros, acompanhe suas leituras e descubra seus hábitos literários."
-        )
+    titulo_pagina("assets/home.png", "Minha Biblioteca Pessoal")
+    st.markdown("Organize seus livros, acompanhe suas leituras e descubra seus hábitos literários.")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     stats = bib.estatisticas()
-
-    col_total, col_lidos, col_lendo, col_media = st.columns(4)
-    with col_total:
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
         st.markdown(f'<div class="stat-box"><div class="stat-num">{stats["total"]}</div><div class="stat-label">Total de livros</div></div>', unsafe_allow_html=True)
-    with col_lidos:
+    with c2:
         st.markdown(f'<div class="stat-box"><div class="stat-num">{stats["lidos"]}</div><div class="stat-label">Livros lidos</div></div>', unsafe_allow_html=True)
-    with col_lendo:
+    with c3:
         st.markdown(f'<div class="stat-box"><div class="stat-num">{stats["lendo"]}</div><div class="stat-label">Lendo agora</div></div>', unsafe_allow_html=True)
-    with col_media:
+    with c4:
         nota = f'{stats["media_avaliacao"]} ★' if stats["media_avaliacao"] else "—"
         st.markdown(f'<div class="stat-box"><div class="stat-num">{nota}</div><div class="stat-label">Nota média</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     col_l, col_r = st.columns(2)
-
     with col_l:
         st.markdown("### Lendo agora")
         lendo = bib.por_status("lendo")
@@ -132,7 +103,6 @@ if pagina == "Início":
                 render_card(l)
         else:
             st.info("Nenhum livro em andamento.")
-
     with col_r:
         st.markdown("### Últimos lidos")
         lidos = bib.por_status("lido")
@@ -146,22 +116,16 @@ if pagina == "Início":
 # PÁGINA: CADASTRAR
 # ════════════════════════════════════════════════════════════════════════════
 elif pagina == "Cadastrar livro":
-    col1, col2 = st.columns([1,10])
-with col1:
-    st.image("assets/add_book.png", width=50)
-with col2:
-    st.title("Cadastrar novo livro")
-st.markdown("---")
+    titulo_pagina("assets/add.png", "Cadastrar novo livro")
 
     with st.form("form_cadastro", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
-            titulo  = st.text_input("Título *")
-            autor   = st.text_input("Autor *")
+            titulo = st.text_input("Título *")
+            autor  = st.text_input("Autor *")
         with col2:
             genero  = st.text_input("Gênero *")
             paginas = st.number_input("Total de páginas", min_value=0, value=0, step=1)
-
         submitted = st.form_submit_button("Cadastrar livro", use_container_width=True)
 
     if submitted:
@@ -179,16 +143,11 @@ st.markdown("---")
 # PÁGINA: MEUS LIVROS
 # ════════════════════════════════════════════════════════════════════════════
 elif pagina == "Meus livros":
-    col1, col2 = st.columns([1,10])
-with col1:
-    st.image("assets/books.png", width=50)
-with col2:
-    st.title("Meus livros")
-    st.markdown("---")
+    titulo_pagina("assets/books.png", "Meus livros")
 
     todos = bib.todos()
     if not todos:
-        st.info("Nenhum livro cadastrado ainda. Vá em **Cadastrar livro** para começar!")
+        st.info("Nenhum livro cadastrado ainda. Vá em Cadastrar livro para começar!")
         st.stop()
 
     col_f1, col_f2, col_f3 = st.columns(3)
@@ -211,8 +170,6 @@ with col2:
         resultado = [l for l in resultado if l.genero == filtro_genero]
 
     st.markdown(f"**{len(resultado)} livro(s) encontrado(s)**")
-    st.markdown("")
-
     if resultado:
         for livro in resultado:
             render_card(livro)
@@ -223,25 +180,18 @@ with col2:
 # PÁGINA: ATUALIZAR PROGRESSO
 # ════════════════════════════════════════════════════════════════════════════
 elif pagina == "Atualizar progresso":
-    col1, col2 = st.columns([1,10])
-with col1:
-    st.image("assets/update_progress.png", width=50)
-with col2:
-    st.title("Atualizar progresso de leitura")
-    st.markdown("---")
+    titulo_pagina("assets/progress.png", "Atualizar progresso de leitura")
 
     todos = bib.todos()
     if not todos:
         st.info("Cadastre livros primeiro.")
         st.stop()
 
-    titulos = [l.titulo for l in todos]
-    titulo_sel = st.selectbox("Selecione o livro", titulos)
+    titulo_sel = st.selectbox("Selecione o livro", [l.titulo for l in todos])
     livro = bib.buscar(titulo_sel)
 
     if livro:
         st.markdown(f"**Autor:** {livro.autor} &nbsp;|&nbsp; **Gênero:** {livro.genero}", unsafe_allow_html=True)
-
         col1, col2 = st.columns(2)
         with col1:
             if livro.total_paginas == 0:
@@ -249,15 +199,8 @@ with col2:
             else:
                 total = livro.total_paginas
                 st.metric("Total de páginas", total)
-
         with col2:
-            pagina_nova = st.number_input(
-                "Página atual",
-                min_value=0,
-                max_value=int(total),
-                value=int(livro.pagina_atual),
-                step=1
-            )
+            pagina_nova = st.number_input("Página atual", min_value=0, max_value=int(total), value=int(livro.pagina_atual), step=1)
 
         pct_preview = round((pagina_nova / total * 100), 1) if total > 0 else 0
         st.progress(pct_preview / 100, text=f"{pct_preview}% concluído")
@@ -279,34 +222,23 @@ with col2:
 # PÁGINA: AVALIAR LIVRO
 # ════════════════════════════════════════════════════════════════════════════
 elif pagina == "Avaliar livro":
-    col1, col2 = st.columns([1,10])
-with col1:
-    st.image("assets/star.png", width=50)
-with col2:
-    st.title("Avaliar livro")
-st.markdown("---")
+    titulo_pagina("assets/star.png", "Avaliar livro")
 
     todos = bib.todos()
     if not todos:
         st.info("Cadastre livros primeiro.")
         st.stop()
 
-    titulos = [l.titulo for l in todos]
-    titulo_sel = st.selectbox("Selecione o livro", titulos)
+    titulo_sel = st.selectbox("Selecione o livro", [l.titulo for l in todos])
     livro = bib.buscar(titulo_sel)
 
     if livro:
         av_atual = livro.get_avaliacao()
         if av_atual:
             st.info(f"Avaliação atual: {ESTRELAS[av_atual['nota']]}  ·  \"{av_atual['comentario']}\"")
-
         nota = st.slider("Nota (1 a 5)", min_value=1, max_value=5, value=av_atual["nota"] if av_atual else 3)
         st.markdown(f"### {ESTRELAS[nota]}")
-        comentario = st.text_area(
-            "Comentário (opcional)",
-            value=av_atual["comentario"] if av_atual else "",
-            placeholder="O que você achou do livro?"
-        )
+        comentario = st.text_area("Comentário (opcional)", value=av_atual["comentario"] if av_atual else "", placeholder="O que você achou do livro?")
 
         if st.button("Salvar avaliação", use_container_width=True):
             try:
@@ -319,20 +251,13 @@ st.markdown("---")
 # PÁGINA: ESTATÍSTICAS
 # ════════════════════════════════════════════════════════════════════════════
 elif pagina == "Estatísticas":
-    col1, col2 = st.columns([1,10])
-with col1:
-    st.image("assets/chart.png", width=50)
-with col2:
-    st.title("Estatísticas da biblioteca")
-st.markdown("---")
+    titulo_pagina("assets/stats.png", "Estatísticas da biblioteca")
 
     stats = bib.estatisticas()
-
     if stats["total"] == 0:
         st.info("Cadastre livros para ver as estatísticas.")
         st.stop()
 
-    # Cards de resumo
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f'<div class="stat-box"><div class="stat-num">{stats["total"]}</div><div class="stat-label">Total de livros</div></div>', unsafe_allow_html=True)
@@ -347,7 +272,6 @@ st.markdown("---")
     st.markdown("<br>", unsafe_allow_html=True)
     col_esq, col_dir = st.columns(2)
 
-    # Gráfico de status
     with col_esq:
         st.markdown("### Status dos livros")
         status_data = pd.DataFrame({
@@ -356,18 +280,14 @@ st.markdown("---")
         })
         chart = alt.Chart(status_data).mark_arc(innerRadius=60).encode(
             theta=alt.Theta("Quantidade:Q"),
-            color=alt.Color(
-                "Status:N",
-                scale=alt.Scale(
-                    domain=["Lidos", "Lendo", "Quero ler"],
-                    range=["#EB7347", "#FFA85D", "#FEC89A"]
-                )
-            ),
+            color=alt.Color("Status:N", scale=alt.Scale(
+                domain=["Lidos", "Lendo", "Quero ler"],
+                range=["#EB7347", "#FFA85D", "#FEC89A"]
+            )),
             tooltip=["Status", "Quantidade"]
         ).properties(height=280)
         st.altair_chart(chart, use_container_width=True)
 
-    # Gráfico por gênero
     with col_dir:
         st.markdown("### Livros por gênero")
         if stats["por_genero"]:
@@ -375,7 +295,6 @@ st.markdown("---")
                 "Gênero": list(stats["por_genero"].keys()),
                 "Quantidade": list(stats["por_genero"].values())
             }).sort_values("Quantidade", ascending=True)
-
             bar = alt.Chart(genero_data).mark_bar(color="#EB7347", cornerRadiusTopRight=4, cornerRadiusBottomRight=4).encode(
                 x=alt.X("Quantidade:Q", axis=alt.Axis(tickMinStep=1)),
                 y=alt.Y("Gênero:N", sort="-x"),
@@ -383,10 +302,8 @@ st.markdown("---")
             ).properties(height=280)
             st.altair_chart(bar, use_container_width=True)
 
-    # Barra de progresso individual
     st.markdown("### Progresso individual")
-    todos = bib.todos()
-    livros_com_paginas = [l for l in todos if l.total_paginas > 0]
+    livros_com_paginas = [l for l in bib.todos() if l.total_paginas > 0]
     if livros_com_paginas:
         for livro in livros_com_paginas:
             pct = livro.percentual_concluido()
